@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Value Proposition Engine — Gravificer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #04060a;
+    --bg2: #060a10;
+    --bg3: #090d14;
+    --border: #1a2535;
+    --cyan: #00e5ff;
+    --magenta: #ff2d78;
+    --amber: #ffae00;
+    --green: #4cff7a;
+    --text: #e0e8f0;
+    --text2: #b0cce0;
+    --text3: #7a9ab8;
+    --text4: #4a6280;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* SCANLINE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,229,255,0.015) 2px, rgba(0,229,255,0.015) 4px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page-wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 5rem;
+  }
+
+  /* HEADER */
+  .site-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tx-badge {
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    color: var(--text4);
+    border: 1px solid var(--border);
+    padding: 3px 12px;
+    border-radius: 2px;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+  }
+
+  .site-header h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(1.3rem, 4vw, 2rem);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--cyan);
+    text-transform: uppercase;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+
+  .site-header .subtitle {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text4);
+    letter-spacing: 0.15em;
+  }
+
+  /* INTRO */
+  .intro-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 2.5rem;
+  }
+
+  .intro-cell {
+    background: var(--bg2);
+    padding: 1rem 1.25rem;
+  }
+
+  .intro-cell .ic-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--text4);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .intro-cell .ic-val {
+    font-size: 0.85rem;
+    color: var(--text2);
+  }
+
+  .ic-val.cyan { color: var(--cyan); }
+  .ic-val.mag { color: var(--magenta); }
+  .ic-val.amb { color: var(--amber); }
+
+  /* SECTION LABEL */
+  .section-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    color: var(--cyan);
+    text-transform: uppercase;
+    margin-bottom: 0.75rem;
+  }
+
+  .section-block {
+    margin-bottom: 2rem;
+  }
+
+  hr.divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2rem 0;
+  }
+
+  /* FORM ELEMENTS */
+  .field-group { margin-bottom: 1.25rem; }
+
+  .field-label {
+    font-size: 0.72rem;
+    color: var(--text3);
+    margin-bottom: 5px;
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  input[type="text"], textarea {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 12px;
+    color: var(--text2);
+    font-family: 'Exo 2', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input[type="text"]:focus, textarea:focus { border-color: var(--cyan); }
+  textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+
+  .dual-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  @media (max-width: 560px) { .dual-col { grid-template-columns: 1fr; } }
+
+  /* CHIPS */
+  .chip {
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.58rem;
+    padding: 2px 7px;
+    border-radius: 2px;
+    letter-spacing: 0.05em;
+  }
+  .chip-e { background: rgba(255,45,120,0.12); color: var(--magenta); border: 1px solid rgba(255,45,120,0.25); }
+  .chip-l { background: rgba(0,229,255,0.08); color: var(--cyan); border: 1px solid rgba(0,229,255,0.2); }
+  .chip-c { background: rgba(255,174,0,0.1); color: var(--amber); border: 1px solid rgba(255,174,0,0.2); }
+
+  /* SLIDERS */
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 5px;
+  }
+
+  .slider-edge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--text4);
+    white-space: nowrap;
+  }
+
+  input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type="range"].e-range::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--magenta); cursor: pointer; }
+  input[type="range"].l-range::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--cyan); cursor: pointer; }
+  input[type="range"].c-range::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--amber); cursor: pointer; }
+  input[type="range"].u-range::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--green); cursor: pointer; }
+
+  input[type="range"].e-range::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--magenta); border: none; cursor: pointer; }
+  input[type="range"].l-range::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--cyan); border: none; cursor: pointer; }
+  input[type="range"].c-range::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--amber); border: none; cursor: pointer; }
+  input[type="range"].u-range::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--green); border: none; cursor: pointer; }
+
+  .slider-val {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.78rem;
+    min-width: 20px;
+    text-align: right;
+  }
+
+  /* GENERATE BUTTON */
+  .btn-generate {
+    width: 100%;
+    padding: 16px;
+    background: transparent;
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.2s;
+    margin-top: 0.5rem;
+  }
+
+  .btn-generate:hover { background: rgba(0,229,255,0.07); }
+  .btn-generate:active { background: rgba(0,229,255,0.12); }
+
+  /* OUTPUT */
+  .output-panel {
+    display: none;
+    margin-top: 2.5rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2rem 1.5rem;
+    background: var(--bg2);
+  }
+
+  .output-panel.visible { display: block; }
+
+  .score-row {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .score-card {
+    text-align: center;
+    min-width: 80px;
+  }
+
+  .score-card .sc-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.15em;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+
+  .score-card .sc-num {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .score-card .sc-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--text4);
+    margin-top: 3px;
+  }
+
+  /* BARS */
+  .bar-group { margin-bottom: 0.75rem; }
+
+  .bar-meta {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--text4);
+    margin-bottom: 4px;
+  }
+
+  .bar-track {
+    width: 100%;
+    height: 5px;
+    background: #0c1420;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.7s cubic-bezier(0.4,0,0.2,1);
+    width: 0%;
+  }
+
+  /* VP STATEMENT */
+  .vp-statement {
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cyan);
+    padding: 1.25rem;
+    border-radius: 4px;
+    background: var(--bg3);
+    margin: 1.5rem 0;
+    line-height: 1.7;
+  }
+
+  .vp-statement .stmt-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  .vp-statement .stmt-text {
+    font-size: 0.92rem;
+    color: var(--text2);
+  }
+
+  .vp-statement .stmt-section {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  /* TAGS */
+  .tags-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 1rem 0;
+  }
+
+  .tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.6rem;
+    padding: 3px 9px;
+    border-radius: 2px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .tag-e { background: rgba(255,45,120,0.1); color: var(--magenta); border: 1px solid rgba(255,45,120,0.2); }
+  .tag-l { background: rgba(0,229,255,0.07); color: var(--cyan); border: 1px solid rgba(0,229,255,0.15); }
+  .tag-c { background: rgba(255,174,0,0.08); color: var(--amber); border: 1px solid rgba(255,174,0,0.2); }
+  .tag-g { background: rgba(76,255,122,0.07); color: var(--green); border: 1px solid rgba(76,255,122,0.17); }
+
+  /* VERDICT */
+  .verdict-wrap { margin-top: 1rem; }
+
+  .verdict-chip {
+    display: inline-block;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    padding: 6px 16px;
+    border-radius: 3px;
+    text-transform: uppercase;
+  }
+
+  .v-strong { background: rgba(0,229,255,0.1); color: var(--cyan); border: 1px solid rgba(0,229,255,0.25); }
+  .v-moderate { background: rgba(255,174,0,0.1); color: var(--amber); border: 1px solid rgba(255,174,0,0.25); }
+  .v-weak { background: rgba(255,45,120,0.1); color: var(--magenta); border: 1px solid rgba(255,45,120,0.25); }
+
+  /* WARNING */
+  .warning-note {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--amber);
+    margin-top: 0.75rem;
+    padding: 8px 12px;
+    border-left: 2px solid var(--amber);
+    background: rgba(255,174,0,0.04);
+    line-height: 1.6;
+  }
+
+  /* RESET */
+  .btn-reset {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text4);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.62rem;
+    padding: 7px 16px;
+    border-radius: 3px;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 1.5rem;
+    display: block;
+    transition: border-color 0.2s, color 0.2s;
+  }
+
+  .btn-reset:hover { border-color: var(--magenta); color: var(--magenta); }
+
+  /* FOOTER */
+  .site-footer {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    text-align: center;
+  }
+
+  .site-footer p {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--text4);
+    letter-spacing: 0.1em;
+  }
+
+  .site-footer a {
+    color: var(--cyan);
+    text-decoration: none;
+  }
+
+  .site-footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="tx-badge">Gravificer // Signal Architecture</div>
+    <h1>Value Proposition Engine</h1>
+    <p class="subtitle">VP-MATRIX v1 &nbsp;·&nbsp; MVANNP &nbsp;·&nbsp; GRAVIFICER</p>
+  </header>
+
+  <!-- INTRO GRID -->
+  <div class="intro-grid">
+    <div class="intro-cell">
+      <div class="ic-label">Core Principle</div>
+      <div class="ic-val">Decisions are made emotionally. Justified logically.</div>
+    </div>
+    <div class="intro-cell">
+      <div class="ic-label">Emotional Weight</div>
+      <div class="ic-val mag">60% of VP Signal</div>
+    </div>
+    <div class="intro-cell">
+      <div class="ic-label">Logical Weight</div>
+      <div class="ic-val cyan">40% of VP Signal</div>
+    </div>
+    <div class="intro-cell">
+      <div class="ic-label">Output</div>
+      <div class="ic-val">Scored VP statement + signal diagnosis</div>
+    </div>
+  </div>
+
+  <!-- SECTION 01 -->
+  <div class="section-block">
+    <div class="section-label">01 — Product Signal</div>
+    <div class="field-group">
+      <div class="field-label">PRODUCT / SERVICE NAME</div>
+      <input type="text" id="productName" placeholder="e.g. Automated Parking Management Platform" />
+    </div>
+    <div class="field-group">
+      <div class="field-label">PRIMARY CUSTOMER</div>
+      <input type="text" id="customer" placeholder="e.g. Commercial real estate operators, fleet managers" />
+    </div>
+    <div class="field-group">
+      <div class="field-label">CORE PROBLEM SOLVED</div>
+      <textarea id="problem" placeholder="What specific friction, fear, or inefficiency does this eliminate?"></textarea>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- SECTION 02 -->
+  <div class="section-block">
+    <div class="section-label">02 — Benefit Mapping</div>
+    <div class="dual-col">
+      <div class="field-group">
+        <div class="field-label">TANGIBLE BENEFITS <span class="chip chip-l">LOGICAL</span></div>
+        <textarea id="tangible" placeholder="Measurable outcomes: cost savings, time reduction, revenue gain, efficiency metrics"></textarea>
+      </div>
+      <div class="field-group">
+        <div class="field-label">INTANGIBLE BENEFITS <span class="chip chip-e">EMOTIONAL</span></div>
+        <textarea id="intangible" placeholder="Felt outcomes: confidence, status, peace of mind, belonging, identity alignment"></textarea>
+      </div>
+    </div>
+    <div class="field-group">
+      <div class="field-label">PERSONAL BENEFIT TO DECISION-MAKER <span class="chip chip-e">EMOTIONAL</span></div>
+      <textarea id="personal" placeholder="How does this make the buyer look, feel, or perform in their role? What career or identity signal does it send?"></textarea>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- SECTION 03 -->
+  <div class="section-block">
+    <div class="section-label">03 — Perceived Cost</div>
+    <div class="dual-col">
+      <div class="field-group">
+        <div class="field-label">FINANCIAL COST <span class="chip chip-l">LOGICAL</span></div>
+        <textarea id="costFinancial" placeholder="Price, ROI timeline, hidden fees, switching costs"></textarea>
+      </div>
+      <div class="field-group">
+        <div class="field-label">EMOTIONAL COST <span class="chip chip-e">EMOTIONAL</span></div>
+        <textarea id="costEmotional" placeholder="Risk of failure, fear of change, learning curve anxiety, loss of control"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- SECTION 04 -->
+  <div class="section-block">
+    <div class="section-label">04 — Signal Weighting</div>
+    <p style="font-family:'Share Tech Mono',monospace; font-size:0.68rem; color:var(--text4); margin-bottom:1.25rem; letter-spacing:0.04em;">Rate each dimension 1–10. Emotional weight is intentionally dominant.</p>
+
+    <div class="field-group">
+      <div class="field-label">EMOTIONAL PULL STRENGTH <span class="chip chip-e">E</span></div>
+      <div class="slider-row">
+        <span class="slider-edge">WEAK</span>
+        <input type="range" class="e-range" id="sliderE" min="1" max="10" value="5" />
+        <span class="slider-edge">STRONG</span>
+        <span class="slider-val" id="valE" style="color:var(--magenta)">5</span>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">LOGICAL PROOF STRENGTH <span class="chip chip-l">L</span></div>
+      <div class="slider-row">
+        <span class="slider-edge">WEAK</span>
+        <input type="range" class="l-range" id="sliderL" min="1" max="10" value="5" />
+        <span class="slider-edge">STRONG</span>
+        <span class="slider-val" id="valL" style="color:var(--cyan)">5</span>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">PERCEIVED COST RESISTANCE <span class="chip chip-c">C</span></div>
+      <div class="slider-row">
+        <span class="slider-edge">LOW</span>
+        <input type="range" class="c-range" id="sliderC" min="1" max="10" value="5" />
+        <span class="slider-edge">HIGH</span>
+        <span class="slider-val" id="valC" style="color:var(--amber)">5</span>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">COMPETITIVE UNIQUENESS</div>
+      <div class="slider-row">
+        <span class="slider-edge">COMMON</span>
+        <input type="range" class="u-range" id="sliderU" min="1" max="10" value="5" />
+        <span class="slider-edge">UNIQUE</span>
+        <span class="slider-val" id="valU" style="color:var(--green)">5</span>
+      </div>
+    </div>
+
+    <button class="btn-generate" onclick="generateOutput()">Generate Value Proposition Signal</button>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="output-panel" id="outputPanel">
+    <div class="section-label" style="margin-bottom:1.5rem">05 — VP Signal Output</div>
+
+    <div class="score-row">
+      <div class="score-card">
+        <div class="sc-label" style="color:var(--magenta)">Emotional</div>
+        <div class="sc-num" style="color:var(--magenta)" id="scoreE">—</div>
+        <div class="sc-sub">Weight 60%</div>
+      </div>
+      <div class="score-card">
+        <div class="sc-label" style="color:var(--cyan)">Logical</div>
+        <div class="sc-num" style="color:var(--cyan)" id="scoreL">—</div>
+        <div class="sc-sub">Weight 40%</div>
+      </div>
+      <div class="score-card">
+        <div class="sc-label" style="color:var(--amber)">Cost Drag</div>
+        <div class="sc-num" style="color:var(--amber)" id="scoreC">—</div>
+        <div class="sc-sub">Resistance</div>
+      </div>
+      <div class="score-card">
+        <div class="sc-label" style="color:var(--green)">VP Score</div>
+        <div class="sc-num" style="color:var(--green)" id="scoreTotal">—</div>
+        <div class="sc-sub">/ 100</div>
+      </div>
+    </div>
+
+    <div class="bar-group">
+      <div class="bar-meta"><span>Emotional Signal</span><span id="barEPct">—</span></div>
+      <div class="bar-track"><div class="bar-fill" id="barE" style="background:var(--magenta)"></div></div>
+    </div>
+    <div class="bar-group">
+      <div class="bar-meta"><span>Logical Signal</span><span id="barLPct">—</span></div>
+      <div class="bar-track"><div class="bar-fill" id="barL" style="background:var(--cyan)"></div></div>
+    </div>
+    <div class="bar-group">
+      <div class="bar-meta"><span>Cost Drag</span><span id="barCPct">—</span></div>
+      <div class="bar-track"><div class="bar-fill" id="barC" style="background:var(--amber)"></div></div>
+    </div>
+    <div class="bar-group">
+      <div class="bar-meta"><span>Uniqueness</span><span id="barUPct">—</span></div>
+      <div class="bar-track"><div class="bar-fill" id="barU" style="background:var(--green)"></div></div>
+    </div>
+
+    <div class="vp-statement" id="vpStatement"></div>
+    <div class="tags-row" id="tagsRow"></div>
+    <div class="verdict-wrap" id="verdictWrap"></div>
+    <div id="warningNote"></div>
+
+    <button class="btn-reset" onclick="resetTool()">Reset Signal</button>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <p>Gravificer &nbsp;·&nbsp; VP-Matrix v1 &nbsp;·&nbsp; MVANNP &nbsp;·&nbsp; <a href="https://quirkyflashchronicles.com/tx/" target="_blank">quirkyflashchronicles.com/tx</a></p>
+  </footer>
+
+</div>
+
+<script>
+  document.querySelectorAll('input[type=range]').forEach(function(s) {
+    s.addEventListener('input', function() {
+      var map = { sliderE: 'valE', sliderL: 'valL', sliderC: 'valC', sliderU: 'valU' };
+      document.getElementById(map[this.id]).textContent = this.value;
+    });
+  });
+
+  function generateOutput() {
+    var product = document.getElementById('productName').value.trim() || 'This product';
+    var customer = document.getElementById('customer').value.trim() || 'target customers';
+    var problem = document.getElementById('problem').value.trim();
+    var tangible = document.getElementById('tangible').value.trim();
+    var intangible = document.getElementById('intangible').value.trim();
+    var personal = document.getElementById('personal').value.trim();
+    var costFin = document.getElementById('costFinancial').value.trim();
+    var costEmo = document.getElementById('costEmotional').value.trim();
+
+    var eRaw = parseInt(document.getElementById('sliderE').value);
+    var lRaw = parseInt(document.getElementById('sliderL').value);
+    var cRaw = parseInt(document.getElementById('sliderC').value);
+    var uRaw = parseInt(document.getElementById('sliderU').value);
+
+    var eScore = eRaw * 10;
+    var lScore = lRaw * 10;
+    var cDrag  = cRaw * 10;
+    var uScore = uRaw * 10;
+
+    var blended = Math.round((eRaw * 0.6 + lRaw * 0.4) * 10);
+    var vpScore = Math.max(0, Math.min(100, Math.round(blended - (cRaw * 0.5) + (uRaw * 0.3))));
+
+    document.getElementById('scoreE').textContent = eScore;
+    document.getElementById('scoreL').textContent = lScore;
+    document.getElementById('scoreC').textContent = cDrag;
+    document.getElementById('scoreTotal').textContent = vpScore;
+
+    setTimeout(function() {
+      document.getElementById('barE').style.width = eScore + '%';
+      document.getElementById('barL').style.width = lScore + '%';
+      document.getElementById('barC').style.width = cDrag + '%';
+      document.getElementById('barU').style.width = uScore + '%';
+    }, 50);
+
+    document.getElementById('barEPct').textContent = eScore + '/100';
+    document.getElementById('barLPct').textContent = lScore + '/100';
+    document.getElementById('barCPct').textContent = cDrag + '/100';
+    document.getElementById('barUPct').textContent = uScore + '/100';
+
+    var stmt = '';
+
+    if (problem) {
+      stmt += '<div class="stmt-label" style="color:var(--cyan)">Problem Addressed</div>';
+      stmt += '<div class="stmt-text" style="color:var(--text3)">' + escHtml(problem) + '</div>';
+      stmt += '<div class="stmt-section">';
+    }
+
+    stmt += '<div class="stmt-label" style="color:var(--magenta)">Value Proposition Signal</div>';
+    stmt += '<div class="stmt-text">' + escHtml(product) + ' helps ' + escHtml(customer) + ' ';
+
+    if (intangible) {
+      stmt += 'feel ' + escHtml(intangible.split(/[,\n]/)[0].trim().toLowerCase());
+    } else {
+      stmt += 'achieve meaningful outcomes';
+    }
+
+    if (tangible) {
+      stmt += ' — backed by ' + escHtml(tangible.split(/[,\n]/)[0].trim().toLowerCase());
+    }
+
+    if (personal) {
+      stmt += '. For the decision-maker: ' + escHtml(personal.split(/[,\n]/)[0].trim().toLowerCase()) + '.';
+    }
+
+    stmt += '</div>';
+
+    if (problem) stmt += '</div>';
+
+    if (costFin || costEmo) {
+      stmt += '<div class="stmt-section">';
+      stmt += '<div class="stmt-label" style="color:var(--amber)">Cost Resistance to Overcome</div>';
+      stmt += '<div class="stmt-text" style="color:var(--text3)">';
+      if (costFin) stmt += escHtml(costFin.split(/[,\n]/)[0].trim());
+      if (costFin && costEmo) stmt += ' &nbsp;·&nbsp; ';
+      if (costEmo) stmt += escHtml(costEmo.split(/[,\n]/)[0].trim());
+      stmt += '</div></div>';
+    }
+
+    document.getElementById('vpStatement').innerHTML = stmt;
+
+    var tags = [];
+    if (eRaw >= 7) tags.push(['High Emotional Signal', 'tag-e']);
+    if (lRaw >= 7) tags.push(['Logical Proof Strong', 'tag-l']);
+    if (cRaw >= 7) tags.push(['High Cost Barrier', 'tag-c']);
+    if (uRaw >= 7) tags.push(['Strong Differentiation', 'tag-g']);
+    if (eRaw < 5) tags.push(['Emotional Signal Weak', 'tag-e']);
+    if (lRaw < 5) tags.push(['Proof Points Needed', 'tag-l']);
+    if (cRaw >= 8) tags.push(['Price Story Critical', 'tag-c']);
+    if (intangible) tags.push(['Intangible Mapped', 'tag-e']);
+    if (personal) tags.push(['Decision-Maker Benefit Defined', 'tag-e']);
+    if (tangible) tags.push(['Tangible Benefit Defined', 'tag-l']);
+
+    document.getElementById('tagsRow').innerHTML = tags.map(function(t) {
+      return '<span class="tag ' + t[1] + '">' + t[0] + '</span>';
+    }).join('');
+
+    var verdict = '', vClass = '';
+    if (vpScore >= 70) { verdict = 'Strong Value Proposition'; vClass = 'v-strong'; }
+    else if (vpScore >= 45) { verdict = 'Moderate — Needs Sharpening'; vClass = 'v-moderate'; }
+    else { verdict = 'Weak — Reposition Signal'; vClass = 'v-weak'; }
+
+    document.getElementById('verdictWrap').innerHTML = '<span class="verdict-chip ' + vClass + '">' + verdict + '</span>';
+
+    var warn = '';
+    if (eRaw < 4 && lRaw < 4) warn = 'Warning: Low benefit signal across both dimensions. Define the emotional hook before refining proof points.';
+    else if (cRaw >= 8 && eRaw < 6) warn = 'Warning: High cost resistance with weak emotional pull. Without emotional justification, price becomes the only argument.';
+    else if (eRaw >= 8 && lRaw < 4) warn = 'Note: Strong emotional pull, thin logical proof. Add data, case studies, or ROI metrics to close the gap.';
+    else if (uRaw <= 3) warn = 'Note: Low differentiation score. Clarify what makes this offer distinct before investing in messaging.';
+
+    document.getElementById('warningNote').innerHTML = warn ? '<div class="warning-note">' + warn + '</div>' : '';
+
+    var panel = document.getElementById('outputPanel');
+    panel.classList.add('visible');
+    setTimeout(function() {
+      panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }
+
+  function resetTool() {
+    ['productName','customer','problem','tangible','intangible','personal','costFinancial','costEmotional'].forEach(function(id) {
+      document.getElementById(id).value = '';
+    });
+    ['sliderE','sliderL','sliderC','sliderU'].forEach(function(id) {
+      document.getElementById(id).value = 5;
+    });
+    ['valE','valL','valC','valU'].forEach(function(id) {
+      document.getElementById(id).textContent = '5';
+    });
+    ['barE','barL','barC','barU'].forEach(function(id) {
+      document.getElementById(id).style.width = '0%';
+    });
+    document.getElementById('outputPanel').classList.remove('visible');
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
+</body>
+</html>
